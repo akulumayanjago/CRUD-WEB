@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRUD Barang</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/page.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-r from-blue-50 to-blue-100">
+  <div class="container mx-auto p-6">
+    <a href="home.html" class="bg-green-500 text-white px-4 py-2 rounded mb-4 inline-block hover:bg-green-600 transition duration-300 shadow-lg">Back to Home</a>
+    <h1 class="text-5xl font-extrabold text-center mb-8 text-blue-900">CRUD Barang</h1>
+
+    <!-- Form Pencarian -->
+    <div class="mb-8">
+      <input 
+        type="text" 
+        id="searchInput" 
+        placeholder="Cari barang berdasarkan nama..." 
+        class="w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
+        oninput="filterItems()"
+      />
+    </div>
+
+    <!-- Form untuk Tambah Barang -->
+    <form id="addForm" class="bg-white p-8 rounded-lg shadow-xl mb-8 border border-gray-200">
+        <h2 class="text-2xl font-semibold mb-6 text-gray-800">Tambah Barang</h2>
+        <div class="mb-6">
+          <label for="name" class="block text-lg font-medium text-gray-700">Nama Barang</label>
+          <input type="text" id="name" name="name" class="w-full p-4 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300" required>
+        </div>
+        <div class="mb-6">
+          <label for="price" class="block text-lg font-medium text-gray-700">Harga</label>
+          <input type="number" id="price" name="price" class="w-full p-4 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300" required>
+        </div>
+        <div class="mb-6">
+          <label for="image" class="block text-lg font-medium text-gray-700">Foto Barang</label>
+          <input type="file" id="image" name="image" class="w-full p-4 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300" required>
+        </div>
+        <div class="mb-6">
+          <label for="description" class="block text-lg font-medium text-gray-700">Deskripsi Barang</label>
+          <textarea id="description" name="description" class="w-full p-4 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300" required></textarea>
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition duration-300 shadow-lg">Tambah Barang</button>
+    </form>
+
+    <!-- Tabel Barang -->
+    <div class="mb-4 flex justify-end">
+      <label for="sortCriteria" class="mr-2 text-lg font-medium text-gray-700">Sort by:</label>
+      <select id="sortCriteria" class="p-2 border border-gray-300 rounded-lg shadow-sm" onchange="sortItems()">
+        <option value="name">Nama</option>
+        <option value="price">Harga</option>
+        <option value="description">Deskripsi</option>
+      </select>
+    </div>
+    <table class="table-auto w-full border-collapse border border-gray-200 shadow-xl mb-8">
+        <thead>
+          <tr class="bg-blue-200">
+            <th class="border px-6 py-4 text-lg text-gray-800">ID</th>
+            <th class="border px-6 py-4 text-lg text-gray-800">Nama Barang</th>
+            <th class="border px-6 py-4 text-lg text-gray-800">Harga</th>
+            <th class="border px-6 py-4 text-lg text-gray-800">Gambar</th>
+            <th class="border px-6 py-4 text-lg text-gray-800">Deskripsi</th>
+            <th class="border px-6 py-4 text-lg text-gray-800">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="itemTable">
+        </tbody>
+    </table>
+
+    <!-- Modal Edit Barang -->
+    <div id="editModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 hidden justify-center items-center">
+      <div class="bg-white p-8 rounded-lg shadow-xl w-11/12 md:w-1/3">
+        <h2 class="text-2xl font-semibold mb-6 text-gray-800">Edit Barang</h2>
+        <form id="editForm" enctype="multipart/form-data">
+          <input type="hidden" id="editId" name="id">
+          <div class="mb-6">
+            <label for="editName" class="block text-lg font-medium text-gray-700">Nama Barang</label>
+            <input type="text" id="editName" name="name" class="w-full p-4 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300" required>
+          </div>
+          <div class="mb-6">
+            <label for="editPrice" class="block text-lg font-medium text-gray-700">Harga</label>
+            <input type="number" id="editPrice" name="price" class="w-full p-4 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300" required>
+          </div>
+          <div class="mb-6">
+            <label for="editImage" class="block text-lg font-medium text-gray-700">Foto Barang (Opsional)</label>
+            <input type="file" id="editImage" name="image" class="w-full p-4 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300">
+          </div>
+          <div class="mb-6">
+            <label for="editDescription" class="block text-lg font-medium text-gray-700">Deskripsi Barang</label>
+            <textarea id="editDescription" name="description" class="w-full p-4 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300" required></textarea>
+          </div>
+          <div class="flex justify-end">
+            <button type="button" class="bg-gray-500 text-white px-6 py-3 rounded-lg mr-2 hover:bg-gray-600 transition duration-300" onclick="closeEditModal()">Batal</button>
+            <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300">Simpan Perubahan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let items = [];
+
+    // Fetch data dan tampilkan di tabel
+    async function fetchData() {
+      const response = await fetch('crud.php');
+      const data = await response.json();
+      items = data;
+      renderTable(items);
+    }
+
+    // Render table dengan data yang diberikan
+    function renderTable(data) {
+      const table = document.getElementById('itemTable');
+      table.innerHTML = ''; 
+
+      data.forEach(item => {
+        const row = `<tr>
+          <td class="border px-6 py-4">${item.id}</td>
+          <td class="border px-6 py-4">${item.name}</td>
+          <td class="border px-6 py-4">${item.price}</td>
+          <td class="border px-6 py-4">
+            <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
+          </td>
+          <td class="border px-6 py-4">${item.description}</td>
+          <td class="border px-6 py-4">
+            <button class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition duration-300" onclick="openEditModal(${item.id}, '${item.name}', '${item.price}', '${item.image}', '${item.description}')">Edit</button>
+            <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-300" onclick="deleteItem(${item.id})">Hapus</button>
+          </td>
+        </tr>`;
+        table.innerHTML += row;
+      });
+    }
+
+    // Tambah barang
+    document.getElementById('addForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      formData.append('action', 'create');
+
+      await fetch('crud.php', {
+        method: 'POST',
+        body: formData
+      });
+
+      this.reset();
+      fetchData();
+    });
+
+    // Hapus barang
+    async function deleteItem(id) {
+      const formData = new FormData();
+      formData.append('action', 'delete');
+      formData.append('id', id);
+
+      await fetch('crud.php', {
+        method: 'POST',
+        body: formData
+      });
+
+      fetchData();
+    }
+
+    // Buka modal edit
+    function openEditModal(id, name, price, image, description) {
+      document.getElementById('editId').value = id;
+      document.getElementById('editName').value = name;
+      document.getElementById('editPrice').value = price.replace('Rp ', '').replace(/\./g, ''); // Remove 'Rp ' and dots for input
+      document.getElementById('editDescription').value = description;
+
+      // Hapus gambar preview sebelumnya
+      const existingImgPreview = document.querySelector('#editImage + img');
+      if (existingImgPreview) existingImgPreview.remove();
+
+      // Jika ingin menampilkan gambar yang ada saat ini di modal
+      if (image) {
+      const imgPreview = document.createElement('img');
+      imgPreview.src = image;
+      imgPreview.classList = 'w-16 h-16 object-cover my-2 rounded-lg';
+      document.getElementById('editImage').parentNode.appendChild(imgPreview);
+      }
+
+      const editModal = document.getElementById('editModal');
+      editModal.classList.remove('hidden');
+      editModal.style.display = 'flex'; // Ensure modal is centered
+    }
+
+    // Tutup modal edit
+    function closeEditModal() {
+      const editModal = document.getElementById('editModal');
+      editModal.classList.add('hidden');
+      editModal.style.display = 'none'; // Hide modal
+
+      // Hapus gambar preview saat modal ditutup
+      const imgPreview = document.querySelector('#editImage + img');
+      if (imgPreview) imgPreview.remove();
+    }
+
+    // Submit form edit
+    document.getElementById('editForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      formData.append('action', 'edit');
+
+      await fetch('crud.php', {
+      method: 'POST',
+      body: formData
+      });
+
+      closeEditModal();
+      fetchData();
+    });
+
+    // Sort data berdasarkan kriteria
+    document.getElementById('sortCriteria').addEventListener('change', function () {
+      sortItems();
+    });
+
+    // Filter items berdasarkan input pencarian
+    function filterItems() {
+      const searchInput = document.getElementById('searchInput').value.toLowerCase();
+      const filteredData = items.filter(item => item.name.toLowerCase().includes(searchInput));
+      renderTable(filteredData);
+    }
+
+    // Sort items berdasarkan kriteria
+    function sortItems() {
+      const criteria = document.getElementById('sortCriteria').value;
+      const sortedData = [...items].sort((a, b) => {
+        if (criteria === 'price') {
+          // Mengambil angka dari harga yang diformat dengan 'Rp' dan titik
+          const priceA = parseFloat(a[criteria].replace('Rp ', '').replace(/\./g, ''));
+          const priceB = parseFloat(b[criteria].replace('Rp ', '').replace(/\./g, ''));
+          return priceA - priceB;
+        } else {
+          if (a[criteria] < b[criteria]) return -1;
+          if (a[criteria] > b[criteria]) return 1;
+          return 0;
+        }
+      });
+      renderTable(sortedData);
+    }
+
+    // Panggil fetchData saat halaman dimuat
+    window.onload = fetchData;
+  </script>
+</body>
+</html>
